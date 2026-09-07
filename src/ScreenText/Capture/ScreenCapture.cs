@@ -30,15 +30,15 @@ public sealed class ScreenCapture
                 }
             };
             
-            bitmapHandle = NativeMethods.CreateDIBSection(screenDC, ref bitmapInfo, 0, out _, IntPtr.Zero, 0);
+            bitmapHandle = NativeMethods.CreateDIBSection(screenDC.handle, ref bitmapInfo, 0, out _, IntPtr.Zero, 0);
             if (bitmapHandle == IntPtr.Zero) 
                 throw new ScreenCaptureException("Unable to create DIB section.");
             
-            previousObject = NativeMethods.SelectObject(memoryDC, bitmapHandle);
+            previousObject = NativeMethods.SelectObject(memoryDC.handle, bitmapHandle);
             if (previousObject == IntPtr.Zero) 
                 throw new ScreenCaptureException("Unable to select DIB section.");
             
-            if (!NativeMethods.BitBlt(memoryDC, 0, 0, rect.Width, rect.Height, screenDC, rect.Left, rect.Top, NativeMethods.SRCCOPY | NativeMethods.CAPTUREBLT))
+            if (!NativeMethods.BitBlt(memoryDC.handle, 0, 0, rect.Width, rect.Height, screenDC.handle, rect.Left, rect.Top, NativeMethods.SRCCOPY | NativeMethods.CAPTUREBLT))
                 throw new ScreenCaptureException("BitBlt failed.");
 
             using var image = Image.FromHbitmap(bitmapHandle);
@@ -47,7 +47,7 @@ public sealed class ScreenCapture
         finally
         {
             if (previousObject != IntPtr.Zero) 
-                NativeMethods.SelectObject(memoryDC, previousObject);
+                NativeMethods.SelectObject(memoryDC.handle, previousObject);
             if (bitmapHandle != IntPtr.Zero) 
                 NativeMethods.DeleteObject(bitmapHandle);
         }

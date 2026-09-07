@@ -2,6 +2,7 @@ using System.Windows;
 using System.Threading;
 using System.IO;
 using WpfApplication = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace ScreenText;
 
