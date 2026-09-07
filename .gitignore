@@ -1,33 +1,49 @@
-```
-# Build artifacts
+```csharp
+# Build results
 bin/
 obj/
-*.exe
-*.dll
-*.pdb
-*.nupkg
+out/
 
-# Dependencies
-packages/
-node_modules/
-
-# Logs
-*.log
-
-# Environment
-.env
-.env.local
-*.env.*
-
-# Editors
-.vscode/
-.idea/
+# User-specific files
+.vs/
+*.userprefs
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 
-# OS
+# Log files
+*.log
+
+# Visual Studio cache/options directory
+.cache/
+
+# Environment specific settings
+.env
+.env.local
+*.env.*
+
+# OS generated files
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Testing
+coverage/
+htmlcov/
+*.coverage
+
+# Dependencies
+node_modules/
+vendor/bundle/
+jspm_packages/
+.npm/
+.yarn/
+bower_components/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
 ```

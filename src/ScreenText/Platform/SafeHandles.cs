@@ -18,6 +18,11 @@ public sealed class SafeDCHandle : SafeHandleZeroOrMinusOneIsInvalid
         _isMemoryDC = isMemoryDC;
     }
 
+    /// <summary>
+    /// Получает необработанное значение дескриптора. Используйте с осторожностью.
+    /// </summary>
+    public IntPtr HandlePtr => DangerousGetHandle();
+
     public static SafeDCHandle CreateScreenDC()
     {
         var hdc = NativeMethods.GetDC(IntPtr.Zero);
@@ -31,7 +36,7 @@ public sealed class SafeDCHandle : SafeHandleZeroOrMinusOneIsInvalid
         if (screenDC.IsInvalid || screenDC.IsClosed)
             throw new ArgumentException("Screen DC is invalid", nameof(screenDC));
         
-        var hdc = NativeMethods.CreateCompatibleDC(screenDC.handle);
+        var hdc = NativeMethods.CreateCompatibleDC(screenDC.HandlePtr);
         if (hdc == IntPtr.Zero)
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "Unable to create compatible DC");
         return new SafeDCHandle(hdc, IntPtr.Zero, true);
