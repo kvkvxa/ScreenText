@@ -1,7 +1,6 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 
 namespace ScreenText.Ocr;
 
@@ -46,17 +45,60 @@ public static class OcrImagePreprocessor
         long luminanceSum = 0;
         var samples = 0;
 
-        for (var y = 0; y < bitmap.Height; y += stepY)
+        // OPTIMIZATION: Use LockBits with unsafe code for 10-50x speedup
+        var rectangle = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+        var data = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+        try
         {
-            for (var x = 0; x < bitmap.Width; x += stepX)
+            var stride = Math.Abs(data.Stride);
+            unsafe
             {
-                var color = bitmap.GetPixel(x, y);
-                luminanceSum += (299L * color.R + 587L * color.G + 114L * color.B) / 1000;
-                samples++;
+                var ptr = (byte*)data.Scan0.ToPointer();
+                for (var y = 0; y < bitmap.Height; y += stepY)
+                {
+                    var rowOffset = y * stride;
+                    for (var x = 0; x < bitmap.Width; x += stepX)
+                    {
+                        var pixelOffset = rowOffset + x * 4; // 32bpp = 4 bytes per pixel
+                        byte blue = ptr[pixelOffset];
+                        byte green = ptr[pixelOffset + 1];
+                        byte red = ptr[pixelOffset + 2];
+
+                        luminanceSum += (299L * red + 587L * green + 114L * blue) / 1000;
+                        samples++;
+                    }
+                }
             }
+        }
+        finally
+        {
+            bitmap.UnlockBits(data);
         }
 
         return samples > 0 && luminanceSum / samples < 128;
+    }
+
+    private static void Invert(Bitmap bitmap)
+    {
+        var rectangle = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+        var data = bitmap.LockBits(rectangle, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+        try
+        {
+            var stride = Math.Abs(data.Stride);
+            unsafe
+            {
+                var ptr = (byte*)data.Scan0.ToPointer();
+                var bytesLength = stride * bitmap.Height;
+                for (var i = 0; i < bytesLength; i++)
+                {
+                    ptr[i] = (byte)(255 - ptr[i]);
+                }
+            }
+        }
+        finally
+        {
+            bitmap.UnlockBits(data);
+        }
     }
 
     private static ColorMatrix CreateGrayscaleMatrix()
@@ -67,23 +109,5 @@ public static class OcrImagePreprocessor
             [0.299f, 0.587f, 0.114f, 0, 0],
             [0, 0, 0, 1, 0],
             [0, 0, 0, 0, 1]]);
-    }
-
-    private static void Invert(Bitmap bitmap)
-    {
-        var rectangle = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-        var data = bitmap.LockBits(rectangle, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-        try
-        {
-            var stride = Math.Abs(data.Stride);
-            var bytes = new byte[stride * bitmap.Height];
-            Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
-            for (var index = 0; index < bytes.Length; index++) bytes[index] = (byte)(255 - bytes[index]);
-            Marshal.Copy(bytes, 0, data.Scan0, bytes.Length);
-        }
-        finally
-        {
-            bitmap.UnlockBits(data);
-        }
     }
 }

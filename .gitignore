@@ -1,11 +1,56 @@
+```
+# Build artifacts
 bin/
 obj/
-artifacts/
-.vs/
+*.exe
+*.dll
+*.pdb
+*.nupkg
+*.snupkg
+
+# Dependencies
+packages/
+node_modules/
+vendor/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
 .idea/
-*.user
-*.suo
-*.userprefs
-TestResults/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Test and coverage
+coverage/
+htmlcov/
+*.coverage
+.coverage.*
+
+# Distribution / packaging
+dist/
+build/
+*.zip
+*.tar.gz
+*.tar.xz
+*.msi
+*.deb
+*.rpm
+
+# Publishing profiles
+PublishOutputs/
+
+# Temporary files
 *.tmp
-*.corrupt-*
+temp/
+```

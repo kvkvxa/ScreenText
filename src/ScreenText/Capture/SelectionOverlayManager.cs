@@ -7,6 +7,7 @@ public sealed class SelectionOverlayManager
     private TaskCompletionSource<PhysicalRect?>? _selectionCompletion;
     private SelectionSession? _session;
     private IReadOnlyList<PhysicalRect>? _topologyAtStart;
+    private int _isCancelled; // Thread-safe flag for cancellation
 
     public SelectionOverlayManager(MonitorService monitorService) => _monitorService = monitorService;
 
@@ -18,6 +19,7 @@ public sealed class SelectionOverlayManager
         {
             throw new InvalidOperationException("SelectRegionAsync must be called on the UI thread.");
         }
+        Interlocked.Exchange(ref _isCancelled, 0); // Reset cancellation flag
         _selectionCompletion = new TaskCompletionSource<PhysicalRect?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var task = _selectionCompletion.Task;
         try
@@ -63,7 +65,14 @@ public sealed class SelectionOverlayManager
         Complete(selection.IsEmpty ? null : selection);
     }
 
-    private void CancelSelection() => Complete(null);
+    private void CancelSelection()
+    {
+        // Thread-safe cancellation using Interlocked
+        if (Interlocked.Exchange(ref _isCancelled, 1) == 0)
+        {
+            Complete(null);
+        }
+    }
 
     private void Render()
     {

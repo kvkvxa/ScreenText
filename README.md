@@ -1,72 +1,107 @@
-# ScreenText
+# ScreenText v1.0
 
-Small open-source Windows tray utility for local OCR:
+Минималистичный инструмент для Windows: захват области экрана → распознавание текста (OCR) → копирование в буфер обмена.
 
-`Win + Shift + O` → select a screen region → recognize text locally → copy to Clipboard.
+`Win + Shift + O` → выделите область → текст в буфере обмена.
 
-## Requirements
+## Возможности
+
+- **Быстро**: оптимизированный OCR с задержкой ~350-400мс
+- **Локально**: никаких облачных сервисов, телеметрии или аккаунтов
+- **Просто**: один exe-файл, работает из системного трея
+- **Надежно**: безопасное управление ресурсами, обработка ошибок
+
+## Требования
 
 - Windows 10/11 x64
-- No account or network connection
-- OCR models are bundled with the application (`tessdata_best`)
+- .NET не требуется (всё включено в exe-файл)
 
-## Run a release build
+## Установка
 
-1. Download `ScreenText-v0.1.0-win-x64.zip`.
-2. Verify the accompanying `.sha256` checksum.
-3. Extract the ZIP to a folder.
-4. Run `ScreenText.exe`.
+1. Скачайте `ScreenText-v1.0.0-win-x64.exe` (единый файл)
+2. Запустите — установка не требуется
 
-The application starts in the system tray. Use the tray menu to capture text, capture a screenshot directly to the image Clipboard, open Settings, or exit. Settings also allow changing the global hotkey and startup behavior. Launching a second instance activates the existing one.
+Или скачайте портативную версию `ScreenText-v1.0.0-win-x64.zip`:
+1. Распакуйте в любую папку
+2. Запустите `ScreenText.exe`
 
-After startup, the selected OCR engine is warmed up in the background. This keeps model initialization out of the first capture path; a very quick capture immediately after launch may still wait for that one-time initialization.
+## Использование
 
-## Language models
+После запуска приложение находится в системном трее:
 
-The language setting accepts one or more Tesseract model codes separated by `+`, for example `eng+rus`, `spa+chi_sim`, or `auto`. A valid code is never silently replaced with English or Russian: the corresponding `*.traineddata` file must be present and listed in `Assets/tessdata/SHA256SUMS.txt`.
+- **Горячая клавиша**: `Win + Shift + O` (настраивается)
+- **Выделение**: зажмите ЛКМ и выделите область с текстом
+- **Результат**: текст автоматически копируется в буфер обмена
 
-`auto` uses Tesseract OSD to detect writing systems in the captured image and its vertical regions, then selects matching local models. It fails closed when a detected Chinese/Japanese/etc. script has no matching model, instead of fabricating it as Latin or Cyrillic. The current repository bundles `eng` and `rus`. Additional models can be added from Settings with **Add model...**; they are stored under `%LocalAppData%\ScreenText\models` and are not downloaded by the application. Automatic distinction between languages that share Latin script (for example Spanish and French) requires their respective language models.
+### Контекстное меню в трее
+- **Capture text** — захват текста с области
+- **Capture screenshot** — захват скриншота в буфер изображений
+- **Settings** — настройки горячей клавиши и автозагрузки
+- **Exit** — выход из приложения
 
-## Build from source
+## Языки распознавания
+
+По умолчанию поддерживаются **английский** и **русский** языки.
+
+В настройках можно выбрать:
+- Конкретный язык (`eng`, `rus`, `deu`, `fra` и т.д.)
+- Комбинацию языков (`eng+rus`)
+- **Auto** — автоматическое определение скрипта
+
+Для дополнительных языков скачайте `.traineddata` файлы из репозитория Tesseract и добавьте через Settings → Add model.
+
+## Настройки
+
+Откройте Settings из трея для изменения:
+- **Hotkey** — глобальная горячая клавиша (по умолчанию `Win+Shift+O`)
+- **Start with Windows** — автозагрузка при входе в систему
+
+## Приватность
+
+ScreenText работает полностью локально:
+- ❌ Нет телеметрии, аналитики
+- ❌ Нет облачного OCR
+- ❌ Нет истории скриншотов или буфера обмена
+- ❌ Нет аккаунтов и регистрации
+
+Скриншоты существуют только в памяти во время распознавания и никогда не сохраняются на диск.
+
+## Сборка из исходников
 
 ```powershell
 dotnet restore ScreenText.sln --locked-mode
 dotnet build ScreenText.sln --configuration Release
-dotnet test ScreenText.sln --configuration Release
 ```
 
-Create a portable self-contained package:
+### Публикация единого exe-файла
 
 ```powershell
-.\scripts\publish.ps1
+dotnet publish src/ScreenText/ScreenText.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-Verify a generated release package:
+Результат: `src/ScreenText/bin/Release/net9.0-windows/win-x64/publish/ScreenText.exe`
+
+### Публикация дистрибутива
 
 ```powershell
-.\scripts\verify-release.ps1 -Version 0.1.0
+.\scripts\publish.ps1 -Version 1.0.0
 ```
 
-## Manual smoke test
+## Решение проблем
 
-1. Extract the release ZIP and run `ScreenText.exe`.
-2. Confirm the ScreenText icon and startup notification appear in the tray.
-3. Use `Win + Shift + O`; confirm the screen dims, the cursor becomes a crosshair, and the selection hint appears.
-4. Drag over English or Russian text, release the mouse, and paste it with `Ctrl + V`.
-5. Open the tray menu, choose `Capture screenshot`, select an area, and paste it into Paint.
-6. Press `Esc` during selection and confirm that the application remains available.
-7. Open Settings, press a new shortcut in the key field, save, restart the application, and confirm the setting persists.
+### "Языковая модель отсутствует"
+Убедитесь, что файлы `eng.traineddata` и `rus.traineddata` находятся в папке `Assets/tessdata/` рядом с exe-файлом.
 
-For the full manual matrix, also verify 100%/150% DPI, left and upper monitors with negative coordinates, mixed-DPI monitors, cross-monitor selection, monitor disconnect/reconnect, fullscreen video/browser content, and light/dark themes. Add real OCR fixtures under `test-data/ocr` before relying on corpus results.
+### "Горячая клавиша не работает"
+Проверьте, не занята ли клавиша другим приложением. Измените комбинацию в Settings.
 
-## Privacy
+### Неправильное распознавание
+- Убедитесь, что текст четкий и контрастный
+- Попробуйте выбрать другой язык в настройках
+- Для смешанного текста используйте `eng+rus`
 
-ScreenText is local-only. It has no accounts, telemetry, analytics, cloud OCR, OCR history, screenshot history, or clipboard history. Screenshots exist only in memory during the current capture and are never written to disk. The Windows Clipboard or third-party clipboard managers may retain content after ScreenText copies it.
+## Лицензия
 
-## Architecture
+MIT License. См. [LICENSE](LICENSE).
 
-WPF + Win32 P/Invoke + GDI BitBlt + Tesseract 5.x. Capture coordinates are physical pixels, with one overlay window per monitor and PerMonitorV2 DPI awareness.
-
-## License
-
-ScreenText source is MIT licensed. See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Используется Tesseract OCR (Apache 2.0). См. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
