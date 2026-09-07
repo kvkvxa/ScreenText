@@ -6,12 +6,10 @@ obj/
 *.dll
 *.pdb
 *.nupkg
-*.snupkg
 
 # Dependencies
 packages/
 node_modules/
-vendor/
 
 # Logs
 *.log
@@ -24,33 +22,12 @@ vendor/
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
-
-# Test and coverage
-coverage/
-htmlcov/
-*.coverage
-.coverage.*
-
-# Distribution / packaging
-dist/
-build/
-*.zip
-*.tar.gz
-*.tar.xz
-*.msi
-*.deb
-*.rpm
-
-# Publishing profiles
-PublishOutputs/
-
-# Temporary files
-*.tmp
-temp/
 ```

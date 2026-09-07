@@ -11,8 +11,9 @@ public sealed class SafeDCHandle : SafeHandleZeroOrMinusOneIsInvalid
     private readonly IntPtr _hWnd;
     private readonly bool _isMemoryDC;
 
-    private SafeDCHandle(IntPtr hWnd, bool isMemoryDC) : base(true)
+    private SafeDCHandle(IntPtr handle, IntPtr hWnd, bool isMemoryDC) : base(true)
     {
+        SetHandle(handle);
         _hWnd = hWnd;
         _isMemoryDC = isMemoryDC;
     }
@@ -22,7 +23,7 @@ public sealed class SafeDCHandle : SafeHandleZeroOrMinusOneIsInvalid
         var hdc = NativeMethods.GetDC(IntPtr.Zero);
         if (hdc == IntPtr.Zero)
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "Unable to acquire screen DC");
-        return new SafeDCHandle(IntPtr.Zero, false);
+        return new SafeDCHandle(hdc, IntPtr.Zero, false);
     }
 
     public static SafeDCHandle CreateMemoryDC(SafeDCHandle screenDC)
@@ -30,10 +31,10 @@ public sealed class SafeDCHandle : SafeHandleZeroOrMinusOneIsInvalid
         if (screenDC.IsInvalid || screenDC.IsClosed)
             throw new ArgumentException("Screen DC is invalid", nameof(screenDC));
         
-        var hdc = NativeMethods.CreateCompatibleDC(screenDC);
+        var hdc = NativeMethods.CreateCompatibleDC(screenDC.handle);
         if (hdc == IntPtr.Zero)
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "Unable to create compatible DC");
-        return new SafeDCHandle(IntPtr.Zero, true);
+        return new SafeDCHandle(hdc, IntPtr.Zero, true);
     }
 
     protected override bool ReleaseHandle()
